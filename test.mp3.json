@@ -1,0 +1,37 @@
+[
+  {
+    "part": "Hello, ",
+    "start": 100,
+    "end": 512
+  },
+  {
+    "part": "world! ",
+    "start": 737,
+    "end": 1212
+  },
+  {
+    "part": "On ",
+    "start": 1775,
+    "end": 2050
+  },
+  {
+    "part": "June ",
+    "start": 2050,
+    "end": 2287
+  },
+  {
+    "part": "16, ",
+    "start": 2300,
+    "end": 2800
+  },
+  {
+    "part": "2024 - 15% ",
+    "start": 2987,
+    "end": 5162
+  },
+  {
+    "part": "off.",
+    "start": 5162,
+    "end": 5525
+  }
+]

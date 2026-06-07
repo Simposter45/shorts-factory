@@ -1,0 +1,27 @@
+[
+  {
+    "part": "I ",
+    "start": 100,
+    "end": 325
+  },
+  {
+    "part": "have  ",
+    "start": 337,
+    "end": 575
+  },
+  {
+    "part": "and ",
+    "start": 587,
+    "end": 762
+  },
+  {
+    "part": "3 ",
+    "start": 775,
+    "end": 1087
+  },
+  {
+    "part": "apples.",
+    "start": 1087,
+    "end": 1687
+  }
+]
