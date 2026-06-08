@@ -17,6 +17,8 @@ interface SceneMediaEditorProps {
   updateDuration: (sceneId: string, duration: number) => void;
   getSceneTimings: (scenes: Scene[]) => { scene: Scene; start: number; end: number; globalEnd: number }[];
   handleSwapMedia: (sceneId: string, customQuery: string) => void;
+  localFiles: Record<string, File>;
+  setLocalFiles: React.Dispatch<React.SetStateAction<Record<string, File>>>;
 }
 
 export default function SceneMediaEditor({
@@ -24,7 +26,7 @@ export default function SceneMediaEditor({
   setResult, setSearchModalSceneId, setSearchModalQuery,
   setIsSearchModalOpen, setSearchModalResults,
   setTrimmerVideo, setTrimmerStartTime,
-  updateDuration, getSceneTimings, handleSwapMedia,
+  updateDuration, getSceneTimings, handleSwapMedia, localFiles, setLocalFiles,
 }: SceneMediaEditorProps) {
   const [quickSwapQuery, setQuickSwapQuery] = React.useState('');
 
@@ -210,6 +212,8 @@ export default function SceneMediaEditor({
                       const file = e.target.files?.[0];
                       if (file) {
                         const url = URL.createObjectURL(file);
+                        // Store the file in localFiles so it can be sent to the backend
+                        setLocalFiles(prev => ({ ...prev, [scene.id]: file }));
                         setResult(prev => {
                           if (!prev) return prev;
                           const newScenes = [...prev.scenes];
@@ -221,6 +225,21 @@ export default function SceneMediaEditor({
                     }}
                   />
                 </label>
+
+                {/* Local file attached badge */}
+                {localFiles[scene.id] && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#064e3b', border: '1px solid #10b981', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', color: '#6ee7b7', fontWeight: 600, maxWidth: '200px' }}>
+                    <span>📁</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={localFiles[scene.id].name}>
+                      {localFiles[scene.id].name}
+                    </span>
+                    <button
+                      onClick={() => setLocalFiles(prev => { const n = { ...prev }; delete n[scene.id]; return n; })}
+                      title="Remove local file"
+                      style={{ background: 'none', border: 'none', color: '#6ee7b7', cursor: 'pointer', padding: '0 2px', fontSize: '13px', lineHeight: 1 }}
+                    >×</button>
+                  </div>
+                )}
                 
                 <button
                   onClick={() => {

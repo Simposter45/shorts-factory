@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     const reactionFaceFile = formData.get('reactionFaceFile') as File | null;
     const reactionFacePosition = formData.get('reactionFacePosition') as string || 'bottom-right';
     const characterSelect = formData.get('characterSelect') as string || 'commentator_1';
+    const avatarEnabled = formData.get('avatarEnabled') !== 'false';
 
     tmpDir = path.join(os.tmpdir(), `video-automator-${uuidv4()}`);
     fs.mkdirSync(tmpDir, { recursive: true });
@@ -388,14 +389,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     const finalPath = path.join(tmpDir, 'final.mp4');
 
     // 4a. Analyze voiceover audio amplitude for audio-reactive avatar animation
-    let avatarScaleExpr = '300+20*abs(sin(2*3.14159*t*1.5))'; // fallback: sine pulse
+    let avatarBounceExpr = '20*abs(sin(2*3.14159*t*1.5))'; // fallback: sine pulse
     try {
       console.log('[Render] Analyzing voiceover amplitude for avatar animation...');
-      // amovie path: on Windows must use forward slashes and escaped colon
-      const lavfiPath = voPath.replace(/\\/g, '/').replace(/([a-zA-Z]):\//, '$1\\://');
+      // Run ffprobe from tmpDir with relative path to entirely avoid Windows C:\ path escaping bugs in amovie
       const { stdout: rmsRaw } = await execPromise(
-        `"${ffprobeInstaller.path}" -f lavfi -i "amovie=${lavfiPath},astats=metadata=1:reset=1" -show_entries frame_tags=lavfi.astats.Overall.RMS_level -of csv=p=0 -vn`,
-        { timeout: 30000 }
+        `"${ffprobeInstaller.path}" -f lavfi -i "amovie=vo.mp3,astats=metadata=1:reset=1" -show_entries frame_tags=lavfi.astats.Overall.RMS_level -of csv=p=0`,
+        { cwd: tmpDir, timeout: 30000 }
       );
 
       const rmsFrames = rmsRaw.trim().split('\n')
@@ -411,46 +411,47 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
           secondsValues.push(window.length > 0 ? window.reduce((a, b) => a + b, 0) / window.length : -60);
         }
 
-        // Normalize dB values → scale pixels in 280-340 range
+        // Normalize dB values → map to bounce offset 0-20px
         const validVals = secondsValues.filter(v => v > -100 && isFinite(v));
         const minDb = Math.max(Math.min(...validVals), -60);
         const maxDb = Math.max(...validVals);
         const dbRange = maxDb - minDb || 1;
-        const scaleValues = secondsValues.map(v =>
-          Math.round(280 + (Math.max(0, Math.min(1, (v - minDb) / dbRange))) * 60)
+        const bounceValues = secondsValues.map(v =>
+          Math.round((Math.max(0, Math.min(1, (v - minDb) / dbRange))) * 20)
         );
 
         // Build piecewise linear FFmpeg expression (interpolates between 1-second keyframes)
-        // e.g. if(lt(t,1), 290+(t-0)*10, if(lt(t,2), 300+(t-1)*(-5), ...))
         let expr = '';
-        for (let i = 0; i < scaleValues.length - 1; i++) {
-          const delta = scaleValues[i + 1] - scaleValues[i];
-          const lerp = `${scaleValues[i]}+${delta}*(t-${i})`;
+        for (let i = 0; i < bounceValues.length - 1; i++) {
+          const delta = bounceValues[i + 1] - bounceValues[i];
+          const lerp = `${bounceValues[i]}+${delta}*(t-${i})`;
           expr += `if(lt(t,${i + 1}),${lerp},`;
         }
-        expr += String(scaleValues[scaleValues.length - 1]);
-        expr += ')'.repeat(scaleValues.length - 1);
+        expr += String(bounceValues[bounceValues.length - 1]);
+        expr += ')'.repeat(bounceValues.length - 1);
 
-        avatarScaleExpr = expr;
-        console.log(`[Render] Audio analysis done — ${scaleValues.length} keyframes, range ${Math.min(...scaleValues)}-${Math.max(...scaleValues)}px`);
+        avatarBounceExpr = expr;
+        console.log(`[Render] Audio analysis done — ${bounceValues.length} keyframes`);
       }
     } catch (err) {
       console.warn('[Render] Audio analysis failed, falling back to sine pulse:', err);
     }
 
     await new Promise(async (resolve, reject) => {
-      let reactionPath = null;
-      if (reactionFaceFile && characterSelect === 'custom') {
-        const ext = reactionFaceFile.name.split('.').pop() || 'png';
-        reactionPath = path.join(tmpDir, `reaction.${ext}`);
-        fs.writeFileSync(reactionPath, Buffer.from(await reactionFaceFile.arrayBuffer()));
-      } else {
-        const publicAvatar = path.join(process.cwd(), 'public', `${characterSelect}.png`);
-        if (fs.existsSync(publicAvatar)) {
-          reactionPath = publicAvatar;
+      let reactionPath: string | null = null;
+      if (avatarEnabled) {
+        if (reactionFaceFile && characterSelect === 'custom') {
+          const ext = reactionFaceFile.name.split('.').pop() || 'png';
+          reactionPath = path.join(tmpDir, `reaction.${ext}`);
+          fs.writeFileSync(reactionPath, Buffer.from(await reactionFaceFile.arrayBuffer()));
         } else {
-          const fallbackAvatar = path.join(process.cwd(), 'public', 'reaction_avatar.png');
-          if (fs.existsSync(fallbackAvatar)) reactionPath = fallbackAvatar;
+          const publicAvatar = path.join(process.cwd(), 'public', `${characterSelect}.png`);
+          if (fs.existsSync(publicAvatar)) {
+            reactionPath = publicAvatar;
+          } else {
+            const fallbackAvatar = path.join(process.cwd(), 'public', 'reaction_avatar.png');
+            if (fs.existsSync(fallbackAvatar)) reactionPath = fallbackAvatar;
+          }
         }
       }
 
@@ -486,25 +487,57 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         else if (reactionFacePosition === 'bottom-left') { overlayX = '40'; overlayY = 'H-h-40'; }
         else if (reactionFacePosition === 'top-right') { overlayX = 'W-w-40'; overlayY = '40'; }
         else if (reactionFacePosition === 'top-left') { overlayX = '40'; overlayY = '40'; }
-        
-        // Add a lavfi white source to generate the circle alpha mask from
-        finalCmd.input('color=c=white:s=300x300').inputOptions(['-f', 'lavfi', '-stream_loop', '-1']);
+
+        // --- Generate a grayscale circle mask PNG in pure Node.js (no external libs) ---
+        // White (255) inside circle = opaque, black (0) outside = transparent
+        const MASK_SIZE = 300;
+        const MASK_R = 150;
+        const grayPixels = Buffer.alloc(MASK_SIZE * MASK_SIZE, 0);
+        for (let py = 0; py < MASK_SIZE; py++) {
+          for (let px = 0; px < MASK_SIZE; px++) {
+            const dx = px - MASK_R, dy = py - MASK_R;
+            if (dx * dx + dy * dy <= MASK_R * MASK_R) grayPixels[py * MASK_SIZE + px] = 255;
+          }
+        }
+        // Build a minimal valid grayscale PNG
+        const pngSig = Buffer.from([137,80,78,71,13,10,26,10]);
+        const crc32 = (buf: Buffer) => {
+          const t: number[] = []; for (let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c;}
+          let c=0xFFFFFFFF; for(let i=0;i<buf.length;i++)c=t[(c^buf[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0;
+        };
+        const mkchunk = (type: string, data: Buffer) => {
+          const tb = Buffer.from(type,'ascii'); const lb = Buffer.allocUnsafe(4); lb.writeUInt32BE(data.length,0);
+          const cb = Buffer.allocUnsafe(4); cb.writeUInt32BE(crc32(Buffer.concat([tb,data])),0);
+          return Buffer.concat([lb,tb,data,cb]);
+        };
+        const ihdrD = Buffer.allocUnsafe(13);
+        ihdrD.writeUInt32BE(MASK_SIZE,0); ihdrD.writeUInt32BE(MASK_SIZE,4);
+        ihdrD[8]=8; ihdrD[9]=0; ihdrD[10]=0; ihdrD[11]=0; ihdrD[12]=0; // grayscale
+        const rawRows = Buffer.alloc(MASK_SIZE*(1+MASK_SIZE));
+        for (let row=0;row<MASK_SIZE;row++) {
+          rawRows[row*(1+MASK_SIZE)]=0; // filter None
+          grayPixels.copy(rawRows, row*(1+MASK_SIZE)+1, row*MASK_SIZE, (row+1)*MASK_SIZE);
+        }
+        const zlib = require('zlib');
+        const compressed = zlib.deflateSync(rawRows);
+        const circleMaskPath = path.join(tmpDir, 'circle_mask.png');
+        fs.writeFileSync(circleMaskPath, Buffer.concat([pngSig, mkchunk('IHDR',ihdrD), mkchunk('IDAT',compressed), mkchunk('IEND',Buffer.alloc(0))]));
+
+        finalCmd.input(circleMaskPath).inputOptions(['-loop', '1']);
         const maskIndex = currentInputIndex++;
 
         // Step 1: Scale & square-crop the avatar, convert to RGBA
         filterComplexStr += `[${reactionIndex}:v]scale=300:300:force_original_aspect_ratio=increase,crop=300:300,format=rgba[avatar_sq];`;
-
-        // Step 2: Generate a white circle on black background using geq pure math (no pixel reads)
-        // This only uses constant values and coordinate math, which works in all FFmpeg builds
-        filterComplexStr += `[${maskIndex}:v]format=rgba,geq=r=255:g=255:b=255:a='if(lte((X-150)*(X-150)+(Y-150)*(Y-150),150*150),255,0)'[circle_mask];`;
-
-        // Step 3: alphamerge to get a perfect circle avatar
+        // Step 2: Use the pre-generated grayscale circle PNG as the alpha mask
+        filterComplexStr += `[${maskIndex}:v]format=gray[circle_mask];`;
+        // Step 3: alphamerge — replaces avatar's alpha channel with the circle mask grayscale values
         filterComplexStr += `[avatar_sq][circle_mask]alphamerge[circle_avatar];`;
 
-        // Step 4: Scale using real audio-amplitude data (piecewise linear interpolated)
-        filterComplexStr += `[circle_avatar]scale=w='${avatarScaleExpr}':h='${avatarScaleExpr}'[avatar];`;
-
-        filterComplexStr += `[v_sub][avatar]overlay=x=${overlayX}:y=${overlayY}[v]`;
+        // Step 4: Bounce the avatar up and down based on audio amplitude (y-offset)
+        // By changing position rather than size, we completely avoid FFmpeg's "reinitializing filters" crash!
+        let baseOverlayY = overlayY;
+        let animatedY = `max(0, ${baseOverlayY} - (${avatarBounceExpr}))`;
+        filterComplexStr += `[v_sub][circle_avatar]overlay=x=${overlayX}:y='${animatedY}':eval=frame[v]`;
       } else {
         filterComplexStr += `[v_sub]null[v]`;
       }

@@ -122,6 +122,7 @@ export default function VideoAutomatorClient() {
               reactionFacePosition={editor.reactionFacePosition}
               characterSelect={editor.characterSelect}
               reactionFaceFile={editor.reactionFaceFile}
+              avatarEnabled={editor.avatarEnabled}
               setResult={editor.setResult}
               audioRef={editor.audioRef}
               bgmAudioRef={editor.bgmAudioRef}
@@ -155,6 +156,8 @@ export default function VideoAutomatorClient() {
                     updateDuration={editor.updateDuration}
                     getSceneTimings={editor.getSceneTimings}
                     handleSwapMedia={editor.handleSwapMedia}
+                    localFiles={editor.localFiles}
+                    setLocalFiles={editor.setLocalFiles}
                   />
                 </div>
 
@@ -189,6 +192,8 @@ export default function VideoAutomatorClient() {
                     setReactionFaceFile={editor.setReactionFaceFile}
                     reactionFacePosition={editor.reactionFacePosition}
                     setReactionFacePosition={editor.setReactionFacePosition}
+                    avatarEnabled={editor.avatarEnabled}
+                    setAvatarEnabled={editor.setAvatarEnabled}
                     avatarPreviewRef2={editor.avatarPreviewRef2}
                   />
                   <SubtitlesEditor

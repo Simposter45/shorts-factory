@@ -18,6 +18,7 @@ interface VideoPreviewProps {
   reactionFacePosition: string;
   characterSelect: string;
   reactionFaceFile: File | null;
+  avatarEnabled: boolean;
   setResult: React.Dispatch<React.SetStateAction<StoryboardResponse | null>>;
   audioRef: React.MutableRefObject<HTMLAudioElement | null>;
   bgmAudioRef: React.MutableRefObject<HTMLAudioElement | null>;
@@ -35,7 +36,7 @@ export default function VideoPreview({
   isPlaying, setIsPlaying,
   audioDuration, audioFile,
   bgmVolume, selectedBgm, bgMusicFile,
-  reactionFacePosition, characterSelect, reactionFaceFile,
+  reactionFacePosition, characterSelect, reactionFaceFile, avatarEnabled,
   setResult,
   audioRef, bgmAudioRef, previewTimerRef,
   audioContextRef, analyserRef, sourceNodeRef,
@@ -283,7 +284,8 @@ export default function VideoPreview({
           );
         })}
 
-        {/* Avatar overlay */}
+        {/* Avatar overlay — only when enabled */}
+        {avatarEnabled && (
         <div
           ref={avatarPreviewRef1}
           style={{
@@ -302,6 +304,7 @@ export default function VideoPreview({
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
+        )}
 
         {/* Active subtitle overlay */}
         {result.voiceoverSubtitles?.map(sub => {

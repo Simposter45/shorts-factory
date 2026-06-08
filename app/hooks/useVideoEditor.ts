@@ -41,6 +41,7 @@ export function useVideoEditor() {
   const [reactionFaceFile, setReactionFaceFile] = useState<File | null>(null);
   const [reactionFacePosition, setReactionFacePosition] = useState<string>('top-right');
   const [characterSelect, setCharacterSelect] = useState<string>('commentator_1');
+  const [avatarEnabled, setAvatarEnabled] = useState<boolean>(true);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [previewTime, setPreviewTime] = useState<number>(0);
 
@@ -191,6 +192,7 @@ export function useVideoEditor() {
       formData.append('bgmKey', selectedBgm);
       formData.append('reactionFacePosition', reactionFacePosition);
       formData.append('characterSelect', characterSelect);
+      formData.append('avatarEnabled', avatarEnabled.toString());
       if (reactionFaceFile && characterSelect === 'custom') {
         formData.append('reactionFaceFile', reactionFaceFile);
       }
@@ -380,6 +382,7 @@ export function useVideoEditor() {
     reactionFaceFile, setReactionFaceFile,
     reactionFacePosition, setReactionFacePosition,
     characterSelect, setCharacterSelect,
+    avatarEnabled, setAvatarEnabled,
     isPlaying, setIsPlaying,
     previewTime, setPreviewTime,
     isSearchModalOpen, setIsSearchModalOpen,
