@@ -230,6 +230,11 @@ export default function VideoPreview({
           const sceneTime = isActive ? previewTime - sceneStartTime : 0;
 
           let imgStyle: any = { width: '100%', height: '100%', objectFit: 'cover', transition: isPlaying ? 'none' : 'transform 0.1s, object-position 0.1s' };
+          
+          if (activeScene.auraFilter) {
+            imgStyle.filter = 'contrast(1.4) saturate(1.6) brightness(0.9) drop-shadow(0 0 10px rgba(168,85,247,0.8))';
+          }
+
           if (isActive && activeScene.mediaUrl && !activeScene.mediaUrl.includes('.mp4')) {
             if (activeScene.animation === 'zoom-in') {
               const scale = 1 + (0.2 * (sceneTime / activeScene.duration));
@@ -256,7 +261,7 @@ export default function VideoPreview({
               {activeScene.mediaUrl && (
                 activeScene.mediaUrl.includes('youtube.com') || activeScene.mediaUrl.includes('youtu.be') ? (
                   <img src={`https://img.youtube.com/vi/${activeScene.mediaUrl.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`} alt="YouTube Preview" style={imgStyle} />
-                ) : activeScene.mediaUrl.includes('unsplash') || activeScene.mediaUrl.includes('wikimedia') || activeScene.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                ) : activeScene.mediaUrl.includes('pollinations.ai') || activeScene.mediaUrl.includes('unsplash') || activeScene.mediaUrl.includes('wikimedia') || activeScene.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
                   <img src={activeScene.mediaUrl} alt="Preview" style={imgStyle} />
                 ) : (
                   <video

@@ -235,6 +235,10 @@ export async function POST(request: Request) {
         filters.push(`settb=1/90000`);
         filters.push(`format=yuv420p`);
 
+        if (scene.auraFilter) {
+          filters.push(`eq=contrast=1.4:saturation=1.6:gamma=0.9`);
+        }
+
         if (scene.textOverlay) {
           const escapedText = scene.textOverlay.text.replace(/'/g, "\u2019").replace(/:/g, "\\:").replace(/,/g, "\\,");
           const pos = scene.textOverlay.position || 'bottom';

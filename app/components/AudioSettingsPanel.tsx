@@ -10,6 +10,8 @@ interface AudioSettingsPanelProps {
   setTtsVoice: (v: string) => void;
   ttsSpeed: string;
   setTtsSpeed: (s: string) => void;
+  ttsReverb: boolean;
+  setTtsReverb: (v: boolean) => void;
   voiceoverOnly: string;
   selectedBgm: string;
   setSelectedBgm: (v: string) => void;
@@ -23,12 +25,22 @@ interface AudioSettingsPanelProps {
   audioContextRef: React.MutableRefObject<any>;
   setIsPlaying: (v: boolean) => void;
   setPreviewTime: (v: number) => void;
+  characterSelect?: string;
+  setCharacterSelect?: (v: string) => void;
+  reactionFaceFile?: File | null;
+  setReactionFaceFile?: (f: File | null) => void;
+  reactionFacePosition?: string;
+  setReactionFacePosition?: (v: string) => void;
+  avatarEnabled?: boolean;
+  setAvatarEnabled?: (v: boolean) => void;
+  avatarPreviewRef2?: React.RefObject<HTMLDivElement>;
 }
 
 export default function AudioSettingsPanel({
   audioFile, setAudioFile, setAudioDuration,
   ttsVoice, setTtsVoice,
   ttsSpeed, setTtsSpeed,
+  ttsReverb, setTtsReverb,
   voiceoverOnly,
   selectedBgm, setSelectedBgm,
   bgmVolume, setBgmVolume,
@@ -36,6 +48,11 @@ export default function AudioSettingsPanel({
   isGeneratingTTS, handleGenerateTTS,
   audioRef, audioContextRef,
   setIsPlaying, setPreviewTime,
+  characterSelect, setCharacterSelect,
+  reactionFaceFile, setReactionFaceFile,
+  reactionFacePosition, setReactionFacePosition,
+  avatarEnabled, setAvatarEnabled,
+  avatarPreviewRef2,
 }: AudioSettingsPanelProps) {
   const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -83,9 +100,11 @@ export default function AudioSettingsPanel({
               >
                 <option value="en-US-ChristopherNeural">Christopher (Pro Male)</option>
                 <option value="en-US-AriaNeural">Aria (Pro Female)</option>
-                <option value="en-US-GuyNeural">Guy (Conversational Male)</option>
+                <option value="en-US-AndrewNeural">Andrew (Heavy/Intense Male)</option>
+                <option value="en-US-SteffanNeural">Steffan (Authoritative Male)</option>
+                <option value="en-US-GuyNeural">Guy (Dramatic/Trailer Male)</option>
                 <option value="en-US-JennyNeural">Jenny (Conversational Female)</option>
-                <option value="en-GB-RyanNeural">Ryan (British Male)</option>
+                <option value="en-GB-RyanNeural">Ryan (Dramatic British Male)</option>
                 <option value="en-GB-SoniaNeural">Sonia (British Female)</option>
               </select>
               <select
@@ -97,7 +116,7 @@ export default function AudioSettingsPanel({
                 <option value="+0%">1.0x</option>
                 <option value="+10%">1.1x</option>
                 <option value="+20%">1.2x</option>
-                <option value="+30%">1.3x</option>
+                <option value="+40%">+40% (Fast)</option>
               </select>
               <button
                 onClick={handleGenerateTTS}
@@ -136,6 +155,7 @@ export default function AudioSettingsPanel({
             style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', width: '100%', marginBottom: '8px' }}
           >
             <option value="none">None</option>
+            <option value="hard_phonk">Hard Phonk (Aggressive Tunetank)</option>
             <option value="phonk">Phonk / Aggressive Drift (Viral)</option>
             <option value="epic_cinematic">Epic Cinematic / Hans Zimmer</option>
             <option value="lofi_chill">Lo-Fi Chillhop</option>

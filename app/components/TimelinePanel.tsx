@@ -114,8 +114,8 @@ export default function TimelinePanel({
                       {scene.mediaUrl && (
                         scene.mediaUrl.includes('youtube.com') || scene.mediaUrl.includes('youtu.be') ? (
                           <img src={`https://img.youtube.com/vi/${scene.mediaUrl.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`} alt="" style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
-                        ) : (scene.mediaUrl.includes('unsplash') || scene.mediaUrl.includes('wikimedia') || scene.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) ? (
-                          <img src={scene.mediaUrl} alt="" style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
+                        ) : (scene.mediaUrl.includes('pollinations.ai') || scene.mediaUrl.includes('unsplash') || scene.mediaUrl.includes('wikimedia') || scene.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) ? (
+                          <img src={scene.mediaUrl} alt="" style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: scene.auraFilter ? 'contrast(1.4) saturate(1.6) brightness(0.9) drop-shadow(0 0 10px rgba(168,85,247,0.8))' : 'none' }} />
                         ) : (
                           <video src={scene.mediaUrl} muted loop playsInline style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
                         )

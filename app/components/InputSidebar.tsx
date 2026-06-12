@@ -166,6 +166,7 @@ export default function InputSidebar({
 
         <div>
           <label style={{ fontWeight: 600, fontSize: '14px', display: 'block', marginBottom: '4px' }}>Voiceover Only</label>
+          <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}>Hint: To pause before a Beat Drop Reveal, use SSML e.g. <code>&lt;break time="4500ms"/&gt;</code></div>
           <textarea
             className="input-area"
             style={{ height: '120px' }}

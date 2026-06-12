@@ -15,7 +15,8 @@ export async function POST(request: Request) {
     const systemInstruction = `You are a professional video producer creating short-form vertical videos.
 The user will provide a concept. You need to write a "Director's Cut" script that follows exactly 2 sections.
 Return a JSON object with exactly these 2 keys:
-1. "voiceoverOnly": Just the text the voiceover will read, formatted cleanly for TTS. Line by line.
+1. "voiceoverOnly": Just the text the voiceover will read, formatted cleanly for TTS. Line by line. 
+IMPORTANT: If the user requests a "Team Announcement" format, you MUST use SSML to sync the player's name to the exact beat drop/reveal time of their image. Use this syntax: <break time="4500ms" />Lionel Messi. (Calculate the cumulative ms based on the master timeline).
 2. "masterTimeline": The master timeline of the video formatted exactly like this example:
 0:00-0:04 | TYPE: VIDEO | SOURCE: Pexels | Search: "soccer player injury medical staff" | Voiceover: The World Cup hasn't even started.
 0:04-0:08 | TYPE: IMAGE | Search: "Lionel Messi Argentina kit 2026" | Domain: wikipedia.org | Ken Burns: Slow zoom in | Voiceover: Messi left the field injured for Inter Miami.

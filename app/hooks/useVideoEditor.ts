@@ -35,6 +35,8 @@ export function useVideoEditor() {
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [ttsVoice, setTtsVoice] = useState('en-US-GuyNeural');
   const [ttsSpeed, setTtsSpeed] = useState('+20%');
+  const [ttsReverb, setTtsReverb] = useState(false);
+  const [bgmQuery, setBgmQuery] = useState('');
 
   const [audioDuration, setAudioDuration] = useState<number>(0);
   const [bgmVolume, setBgmVolume] = useState<number>(0.1);
@@ -187,9 +189,8 @@ export function useVideoEditor() {
         formData.append('bgmVolume', bgmVolume.toString());
       }
       if (bgMusicFile && selectedBgm === 'custom') {
-        formData.append('bgmFile', bgMusicFile);
+        formData.append('bgMusic', bgMusicFile);
       }
-      formData.append('bgmKey', selectedBgm);
       formData.append('reactionFacePosition', reactionFacePosition);
       formData.append('characterSelect', characterSelect);
       formData.append('avatarEnabled', avatarEnabled.toString());
@@ -314,10 +315,11 @@ export function useVideoEditor() {
     }
     setIsGeneratingTTS(true);
     try {
+      const isSSML = sections.voiceoverOnly.includes('<break') || sections.voiceoverOnly.includes('<speak');
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: sections.voiceoverOnly, voice: ttsVoice, rate: ttsSpeed }),
+        body: JSON.stringify({ text: sections.voiceoverOnly, voice: ttsVoice, rate: ttsSpeed, isSSML, reverb: ttsReverb }),
       });
       if (!response.ok) throw new Error(await response.text());
       const data = await response.json();
@@ -377,6 +379,8 @@ export function useVideoEditor() {
     isGeneratingTTS,
     ttsVoice, setTtsVoice,
     ttsSpeed, setTtsSpeed,
+    ttsReverb, setTtsReverb,
+    bgmQuery, setBgmQuery,
     audioDuration, setAudioDuration,
     bgmVolume, setBgmVolume,
     reactionFaceFile, setReactionFaceFile,

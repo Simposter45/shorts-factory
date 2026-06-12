@@ -10,6 +10,7 @@ import SceneMediaEditor from './components/SceneMediaEditor';
 import SubtitlesEditor from './components/SubtitlesEditor';
 import TimelinePanel from './components/TimelinePanel';
 import SearchSwapModal from './components/SearchSwapModal';
+import TextOverlaysEditor from './components/TextOverlaysEditor';
 
 export default function VideoAutomatorClient() {
   const editor = useVideoEditor();
@@ -158,6 +159,15 @@ export default function VideoAutomatorClient() {
                     handleSwapMedia={editor.handleSwapMedia}
                     localFiles={editor.localFiles}
                     setLocalFiles={editor.setLocalFiles}
+                    avatarEnabled={editor.avatarEnabled}
+                    setAvatarEnabled={editor.setAvatarEnabled}
+                    characterSelect={editor.characterSelect}
+                    setCharacterSelect={editor.setCharacterSelect}
+                    reactionFaceFile={editor.reactionFaceFile}
+                    setReactionFaceFile={editor.setReactionFaceFile}
+                    reactionFacePosition={editor.reactionFacePosition}
+                    setReactionFacePosition={editor.setReactionFacePosition}
+                    avatarPreviewRef2={editor.avatarPreviewRef2}
                   />
                 </div>
 
@@ -171,6 +181,8 @@ export default function VideoAutomatorClient() {
                     setTtsVoice={editor.setTtsVoice}
                     ttsSpeed={editor.ttsSpeed}
                     setTtsSpeed={editor.setTtsSpeed}
+                    ttsReverb={editor.ttsReverb}
+                    setTtsReverb={editor.setTtsReverb}
                     voiceoverOnly={editor.sections.voiceoverOnly}
                     selectedBgm={editor.selectedBgm}
                     setSelectedBgm={editor.setSelectedBgm}
@@ -184,8 +196,6 @@ export default function VideoAutomatorClient() {
                     audioContextRef={editor.audioContextRef}
                     setIsPlaying={editor.setIsPlaying}
                     setPreviewTime={editor.setPreviewTime}
-                  />
-                  <CharacterPanel
                     characterSelect={editor.characterSelect}
                     setCharacterSelect={editor.setCharacterSelect}
                     reactionFaceFile={editor.reactionFaceFile}
@@ -199,6 +209,11 @@ export default function VideoAutomatorClient() {
                   <SubtitlesEditor
                     result={editor.result}
                     audioDuration={editor.audioDuration}
+                    setResult={editor.setResult}
+                    voiceoverScript={editor.sections.voiceoverOnly}
+                  />
+                  <TextOverlaysEditor
+                    result={editor.result}
                     setResult={editor.setResult}
                   />
                 </div>

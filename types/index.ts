@@ -17,6 +17,10 @@ export interface Scene {
   textOverlay?: TextOverlay;
   animation?: 'none' | 'zoom-in' | 'zoom-out' | 'pan-left-right' | 'pan-right-left';
   transitionNext?: boolean;
+  isReveal?: boolean;
+  revealTime?: number;
+  customPrompt?: string;
+  auraFilter?: boolean;
 }
 
 export interface SubtitleClip {

@@ -7,9 +7,48 @@ interface SubtitlesEditorProps {
   result: StoryboardResponse;
   audioDuration: number;
   setResult: React.Dispatch<React.SetStateAction<StoryboardResponse | null>>;
+  voiceoverScript?: string;
 }
 
-export default function SubtitlesEditor({ result, audioDuration, setResult }: SubtitlesEditorProps) {
+export default function SubtitlesEditor({ result, audioDuration, setResult, voiceoverScript }: SubtitlesEditorProps) {
+  const handleRebuildFromScript = () => {
+    if (!voiceoverScript || !voiceoverScript.trim()) {
+      alert("No voiceover script available to build subtitles from.");
+      return;
+    }
+    
+    // Clean out SSML and XML comments
+    let cleaned = voiceoverScript
+      .replace(/<!--[\s\S]*?-->/g, '') // remove comments
+      .replace(/<\/?speak[^>]*>/gi, ''); // remove <speak> tags
+      
+    // Split by break tags, double newlines, or sentences
+    // For simplicity, let's split by break tags and line breaks to preserve user's structure
+    const segments = cleaned.split(/<break[^>]*>|\n\n|\n/i);
+    
+    const newSubs = segments
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .map((text, i) => ({
+        id: `sub_rebuilt_${Date.now()}_${i}`,
+        text: text,
+        startTime: i * 2, // arbitrary starting spacing, users will click Auto-Sync right after!
+        duration: 2
+      }));
+
+    if (newSubs.length === 0) {
+      alert("Could not extract any spoken text from the script.");
+      return;
+    }
+
+    if (confirm("This will overwrite all existing subtitle blocks with fresh ones extracted from the Voiceover Script. Are you sure?")) {
+      setResult(prev => {
+        if (!prev) return prev;
+        return { ...prev, voiceoverSubtitles: newSubs };
+      });
+    }
+  };
+
   const handleAutoSync = () => {
     setResult(prev => {
       if (!prev || !prev.voiceoverSubtitles || prev.voiceoverSubtitles.length === 0) return prev;
@@ -116,14 +155,21 @@ export default function SubtitlesEditor({ result, audioDuration, setResult }: Su
   };
 
   return (
-    <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '20px', maxHeight: '400px', overflowY: 'auto', color: 'white' }}>
+    <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '20px', height: '100%', maxHeight: '400px', overflowY: 'auto', color: 'white' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ margin: 0, fontSize: '18px' }}>Voiceover Subtitles Editor</h3>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
+            onClick={handleRebuildFromScript}
+            style={{ padding: '6px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+            title="Re-extract subtitles from the Voiceover Script text"
+          >
+            🔄 Rebuild from Script
+          </button>
+          <button
             onClick={handleAutoSync}
-            style={{ padding: '6px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
-            title="Auto-sync using exact Microsoft TTS word timings"
+            style={{ padding: '6px 12px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+            title="Automatically adjust start times based on the TTS generated word timings"
           >
             ⚡ Perfect Auto-Sync
           </button>
